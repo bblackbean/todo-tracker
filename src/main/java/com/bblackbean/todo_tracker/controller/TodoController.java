@@ -1,7 +1,9 @@
 package com.bblackbean.todo_tracker.controller;
 
 import com.bblackbean.todo_tracker.domain.Todo;
+import com.bblackbean.todo_tracker.dto.TodoRequest;
 import com.bblackbean.todo_tracker.repository.TodoRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,8 +36,13 @@ public class TodoController {
     }
 
     @PostMapping
-    public Todo create(@RequestBody Todo todo) {
-        return todoRepository.save(todo);
+    public ResponseEntity<Todo> create(@Valid @RequestBody TodoRequest request) {   // @Valid : 입력값 검증 수행 / @RequestBody TodoRequest : 요청 JSON을 DTO로 매핑
+        Todo todo = new Todo();
+        todo.setTitle(request.getTitle());
+        todo.setCompleted(false);
+        Todo saved = todoRepository.save(todo);
+
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
@@ -60,7 +67,7 @@ public class TodoController {
 //    public List<Todo> searchByTitle(@RequestParam String keyword) {
 //        return todoRepository.findByTitleContaining(keyword);
 //    }
-//
+
     // 완료상태에 따라 필터링
     // http://localhost:8080/todos/filter?completed=true
     @GetMapping("/filter")

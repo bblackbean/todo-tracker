@@ -1,5 +1,6 @@
 package com.bblackbean.todo_tracker.controller;
 
+import com.bblackbean.todo_tracker.common.ApiResponse;
 import com.bblackbean.todo_tracker.domain.Todo;
 import com.bblackbean.todo_tracker.dto.TodoRequest;
 import com.bblackbean.todo_tracker.repository.TodoRepository;
@@ -26,8 +27,9 @@ public class TodoController {
     }
 
     @GetMapping
-    public List<Todo> findAll() {
-        return todoRepository.findAll();
+    public ResponseEntity<ApiResponse<List<Todo>>> findAll() {
+        List<Todo> list = todoRepository.findAll();
+        return ResponseEntity.ok(ApiResponse.success(list));
     }
 
     @GetMapping("/{id}")
@@ -36,13 +38,12 @@ public class TodoController {
     }
 
     @PostMapping
-    public ResponseEntity<Todo> create(@Valid @RequestBody TodoRequest request) {   // @Valid : 입력값 검증 수행 / @RequestBody TodoRequest : 요청 JSON을 DTO로 매핑
+    public ResponseEntity<ApiResponse<Todo>> create(@Valid @RequestBody TodoRequest request) {   // @Valid : 입력값 검증 수행 / @RequestBody TodoRequest : 요청 JSON을 DTO로 매핑
         Todo todo = new Todo();
         todo.setTitle(request.getTitle());
-        todo.setCompleted(false);
+        todo.setCompleted(false);   // 기본값 설정
         Todo saved = todoRepository.save(todo);
-
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(ApiResponse.success("할 일이 등록되었습니다.", saved));
     }
 
     @DeleteMapping("/{id}")

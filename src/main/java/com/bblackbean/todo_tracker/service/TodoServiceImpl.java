@@ -1,6 +1,9 @@
 package com.bblackbean.todo_tracker.service;
 
 import com.bblackbean.todo_tracker.domain.Todo;
+import com.bblackbean.todo_tracker.dto.TodoMapper;
+import com.bblackbean.todo_tracker.dto.TodoRequest;
+import com.bblackbean.todo_tracker.dto.TodoResponse;
 import com.bblackbean.todo_tracker.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,8 +31,10 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public Todo save(Todo todo) {
-        return todoRepository.save(todo);
+    public TodoResponse save(TodoRequest request) {
+        Todo todo = TodoMapper.toEntity(request);
+        Todo saved = todoRepository.save(todo);
+        return TodoMapper.toResponse(saved);
     }
 
     @Override
@@ -55,5 +60,17 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public Page<Todo> paging(Pageable pageable) {
         return todoRepository.findAll(pageable);
+    }
+
+    @Override
+    public TodoResponse update(Long id, TodoRequest request) {
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("할 일을 찾을 수 없습니다."));
+
+        todo.setTitle(request.getTitle());
+        todo.setCompleted(request.isCompleted());
+
+        Todo saved = todoRepository.save(todo);
+        return new TodoResponse(saved.getId(), saved.getTitle(), saved.isCompleted());
     }
 }

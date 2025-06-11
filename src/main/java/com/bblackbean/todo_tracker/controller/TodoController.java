@@ -3,6 +3,7 @@ package com.bblackbean.todo_tracker.controller;
 import com.bblackbean.todo_tracker.common.ApiResponse;
 import com.bblackbean.todo_tracker.domain.Todo;
 import com.bblackbean.todo_tracker.dto.TodoRequest;
+import com.bblackbean.todo_tracker.dto.TodoResponse;
 import com.bblackbean.todo_tracker.service.TodoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,12 +55,9 @@ public class TodoController {
 
     // 등록
     @PostMapping
-    public ResponseEntity<ApiResponse<Todo>> create(@Valid @RequestBody TodoRequest request) {   // @Valid : 입력값 검증 수행 / @RequestBody TodoRequest : 요청 JSON을 DTO로 매핑
-        Todo todo = new Todo();
-        todo.setTitle(request.getTitle());
-        todo.setCompleted(false);   // 기본값 설정
-
-        return ResponseEntity.ok(ApiResponse.success("할 일이 등록되었습니다.", todoService.save(todo)));
+    public ResponseEntity<ApiResponse<TodoResponse>> create(@Valid @RequestBody TodoRequest request) {   // @Valid : 입력값 검증 수행 / @RequestBody TodoRequest : 요청 JSON을 DTO로 매핑
+        TodoResponse saved = todoService.save(request);
+        return ResponseEntity.ok(ApiResponse.success("할 일이 등록되었습니다.", saved));
     }
 
     // 삭제
@@ -71,14 +69,11 @@ public class TodoController {
 
     // 수정
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Todo>> update(@PathVariable Long id, @RequestBody Todo updatedTodo) {
-        return todoService.findById(id)
-                .map(todo -> {
-                    todo.setTitle(updatedTodo.getTitle());
-                    todo.setCompleted(updatedTodo.isCompleted());
-                    return ResponseEntity.ok(ApiResponse.success("수정 완료", todoService.save(todo)));
-                }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<TodoResponse>> update(@PathVariable Long id, @Valid @RequestBody TodoRequest request) {
+        TodoResponse updated = todoService.update(id, request);
+        return ResponseEntity.ok(ApiResponse.success("수정 완료", updated));
     }
+
 
     // 완료상태에 따라 필터링
     // http://localhost:8080/todos/filter?completed=true

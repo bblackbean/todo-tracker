@@ -1,6 +1,9 @@
 package com.bblackbean.todo_tracker.service;
 
 import com.bblackbean.todo_tracker.domain.Todo;
+import com.bblackbean.todo_tracker.dto.TodoRequest;
+import com.bblackbean.todo_tracker.dto.TodoResponse;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,7 +16,7 @@ public interface TodoService {
 
     Optional<Todo> findById(Long id);
 
-    Todo save(Todo todo);
+    TodoResponse save(TodoRequest request);
 
     void delete(Long id);
 
@@ -24,4 +27,6 @@ public interface TodoService {
     List<Todo> sortBy(String sortBy, Sort.Direction direction);
 
     Page<Todo> paging(Pageable pageable);
+
+    TodoResponse update(Long id, @Valid TodoRequest request);
 }

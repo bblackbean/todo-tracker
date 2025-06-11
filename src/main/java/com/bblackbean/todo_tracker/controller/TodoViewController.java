@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
@@ -30,6 +31,28 @@ public class TodoViewController {
     public String addTodo(@ModelAttribute Todo todo) {
         todo.setCompleted(false);   // 기본값 : 미완료
         todoRepository.save(todo);
+        return "redirect:/view/todos";
+    }
+
+    // 삭제
+    @PostMapping("/view/todos/delete/{id}")
+    public String deleteTodo(@PathVariable Long id) {
+        todoRepository.deleteById(id);
+        return "redirect:/view/todos";
+    }
+
+    // 수정 폼 이동
+    @GetMapping("/view/todos/edit/{id}")
+    public String editForm(@PathVariable Long id, Model model) {
+        Todo todo = todoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 ID 없음: " + id));
+        model.addAttribute("todo", todo);
+        return "edit";
+    }
+
+    // 수정
+    @PostMapping("/view/todos/edit")
+    public String editTodo(@ModelAttribute Todo todo) {
+        todoRepository.save(todo);  // 같은 ID면 덮어씀
         return "redirect:/view/todos";
     }
 }

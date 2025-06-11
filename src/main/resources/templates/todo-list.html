@@ -19,6 +19,15 @@
         <td th:text="${todo.id}"></td>
         <td th:text="${todo.title}"></td>
         <td th:text="${todo.completed} ? '완료' : '미완료'"></td>
+        <td>
+            <!-- 삭제 버튼 -->
+            <form th:action="@{/view/todos/delete/{id}(id=${todo.id})}" method="post" style="display:inline;">
+                <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+            </form>
+
+            <!-- 수정 링크 -->
+            <a th:href="@{/view/todos/edit/{id}(id=${todo.id})}">수정</a>
+        </td>
     </tr>
     </tbody>
 </table>

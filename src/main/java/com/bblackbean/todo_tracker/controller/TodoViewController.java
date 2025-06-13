@@ -2,11 +2,13 @@ package com.bblackbean.todo_tracker.controller;
 
 import com.bblackbean.todo_tracker.domain.Todo;
 import com.bblackbean.todo_tracker.repository.TodoRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -19,9 +21,29 @@ public class TodoViewController {
     // TodoViewController 클래스가 생성될 때 TodoRepository 객체를 주입받음
 
     // 조회 화면
+    // /view/todos?keyword=Meeting&sortBy=title&order=desc
     @GetMapping("/view/todos")
-    public String viewTodos(Model model) {
-        model.addAttribute("todos", todoRepository.findAll());
+    public String viewTodos(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "id") String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String order,
+            Model model) {
+
+        // 정렬
+        Sort.Direction direction = order.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        // Sort.Direction : Spring Data JPA에서 제공하는 열거형(Enum). 데이터를 정렬할 때 정렬 순서를 지정하는 데 사용됨
+        //     Sort.Direction.ASC : 데이터를 오름차순으로 정렬
+        //     Sort.Direction.DESC : 데이터를 내림차순으로 정렬
+
+        List<Todo> todos;
+        if (keyword != null) {  // 검색어가 있으면..
+            todos = todoRepository.findByTitleContainingIgnoreCase(keyword, sort);  // title에 keyword가 포함된 항목 검색(대소문자 구분 없이 검색, sort로 정렬
+        } else {
+            todos = todoRepository.findAll(sort);
+        }
+
+        model.addAttribute("todos", todos);
         model.addAttribute("todo", new Todo()); // 등록 폼용 빈 객체
         return "todo-list";     // templates/todo-list.html 렌더링
     }

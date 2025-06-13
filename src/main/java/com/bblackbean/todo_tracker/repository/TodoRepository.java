@@ -1,7 +1,8 @@
 package com.bblackbean.todo_tracker.repository;
 
 import com.bblackbean.todo_tracker.domain.Todo;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY t.completed ASC")
     List<Todo> advancedSearch(@Param("keyword") String keyword);
 
-    // 검색 및 정렬
-    List<Todo> findByTitleContainingIgnoreCase(String keyword, Sort sort);
+    // 검색 및 정렬 (페이징)
+    Page<Todo> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
+
 }

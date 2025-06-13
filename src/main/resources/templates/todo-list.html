@@ -55,6 +55,18 @@
     </tbody>
 </table>
 
+<!-- 페이징 -->
+<div>
+    <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+        <a th:href="@{/view/todos(page=${i}, keyword=${param.keyword}, sortBy=${param.sortBy}, order=${param.order})}"
+           th:text="${i + 1}"
+           th:classappend="${i == currentPage} ? 'active' : ''"
+           style="margin: 0 4px;"
+        ></a>
+    </span>
+</div>
+
+<!-- 등록 -->
 <h2>할 일 등록</h2>
 <form method="post" th:action="@{/view/todos}" th:object="${todo}">
     <input type="text" th:field="*{title}" placeholder="할 일 제목" required />

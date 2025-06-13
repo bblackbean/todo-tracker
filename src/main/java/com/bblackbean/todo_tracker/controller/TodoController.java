@@ -5,6 +5,7 @@ import com.bblackbean.todo_tracker.domain.Todo;
 import com.bblackbean.todo_tracker.dto.TodoRequest;
 import com.bblackbean.todo_tracker.dto.TodoResponse;
 import com.bblackbean.todo_tracker.service.TodoService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ public class TodoController {
     private final TodoService todoService;
 
     // 전체 조회
+    @Operation(summary = "할 일 목록 조회", description = "등록된 모든 할 일 데이터를 반환합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<Todo>>> findAll() {
         // ResponseEntity<ApiResponse<List<Todo>>>
@@ -37,6 +39,7 @@ public class TodoController {
     }
 
     // 단건 조회
+    @Operation(summary = "할 일 단건 조회", description = "특정 아이디의 할 일 데이터를 반환합니다.")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Todo>> findById(@PathVariable Long id) {
         return todoService.findById(id)
@@ -54,6 +57,7 @@ public class TodoController {
     }
 
     // 등록
+    @Operation(summary = "할 일 등록", description = "할 일 데이터를 등록합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<TodoResponse>> create(@Valid @RequestBody TodoRequest request) {   // @Valid : 입력값 검증 수행 / @RequestBody TodoRequest : 요청 JSON을 DTO로 매핑
         TodoResponse saved = todoService.save(request);
@@ -61,6 +65,7 @@ public class TodoController {
     }
 
     // 삭제
+    @Operation(summary = "할 일 삭제", description = "할 일 데이터를 삭제합니다.")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         todoService.delete(id);
@@ -68,6 +73,7 @@ public class TodoController {
     }
 
     // 수정
+    @Operation(summary = "할 일 수정", description = "할 일 데이터를 수정합니다.")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TodoResponse>> update(@PathVariable Long id, @Valid @RequestBody TodoRequest request) {
         TodoResponse updated = todoService.update(id, request);
@@ -77,6 +83,7 @@ public class TodoController {
 
     // 완료상태에 따라 필터링
     // http://localhost:8080/todos/filter?completed=true
+    @Operation(summary = "할 일 필터링", description = "할 일 데이터를 완료여부에 따라 필터링합니다.")
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<List<Todo>>> filterByCompleted(@RequestParam boolean completed) {
         return ResponseEntity.ok(ApiResponse.success(todoService.findByCompleted(completed)));
@@ -84,6 +91,7 @@ public class TodoController {
 
     // 검색 2 (키워드 검색 + 정렬)
     // http://localhost:8080/todos/search?keyword=공부
+    @Operation(summary = "할 일 검색", description = "검색 키워드에 맞는 할 일 데이터들을 전체 조회합니다.")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<Todo>>> searchTodos(@RequestParam String keyword) {
         return ResponseEntity.ok(ApiResponse.success(todoService.search(keyword)));
@@ -91,6 +99,7 @@ public class TodoController {
 
     // 정렬
     // http://localhost:8080/todos/sorted?sortBy=completed&order=desc
+    @Operation(summary = "할 일 목록 정렬", description = "오름차순/내림차순에 따라 할 일 데이터를 정렬합니다.")
     @GetMapping("/sorted")
     public ResponseEntity<ApiResponse<List<Todo>>> getSortedTodos(@RequestParam String sortBy, @RequestParam String order) {
         Sort.Direction direction = order.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;   // 정렬 방향 결정
@@ -99,6 +108,7 @@ public class TodoController {
 
     // 페이징
     // http://localhost:8080/todos/paging?page=0&size=2
+    @Operation(summary = "할 일 목록 페이징", description = "페이지 변수에 따라 할 일 데이터를 조회합니다.")
     @GetMapping("/paging")
     public ResponseEntity<ApiResponse<Page<Todo>>> getPagedTodos(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());

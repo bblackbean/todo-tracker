@@ -2,12 +2,12 @@ package com.bblackbean.todo_tracker.controller;
 
 import com.bblackbean.todo_tracker.domain.Todo;
 import com.bblackbean.todo_tracker.repository.TodoRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Controller
 public class TodoViewController {
@@ -55,4 +55,19 @@ public class TodoViewController {
         todoRepository.save(todo);  // 같은 ID면 덮어씀
         return "redirect:/view/todos";
     }
+
+    // 체크박스 토글
+    @PostMapping("/view/todos/{id}/toggle")
+    @ResponseBody
+    public ResponseEntity<?> toggleCompleted(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+        boolean completed = body.get("completed");
+
+        return todoRepository.findById(id)
+                .map(todo -> {
+                    todo.setCompleted(completed);
+                    todoRepository.save(todo);
+                    return ResponseEntity.ok().build();     // 응답내용 없이 200 OK (비동기 요청이라 redirect 필요없음)
+                }).orElse(ResponseEntity.notFound().build());
+    }
+
 }

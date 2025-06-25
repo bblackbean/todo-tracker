@@ -2,61 +2,70 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
     <title>할 일 목록</title>
 </head>
-<body>
-<h1>할 일 목록</h1>
+<body class="bg-light text-dark" id="main-body">
+<div class="container mt-4">
+    <h1>할 일 목록</h1>
 
-<!-- 검색 및 정렬 -->
-<h2>검색 및 정렬</h2>
-<form method="get" th:action="@{/view/todos}">
-    <input type="text" name="keyword" placeholder="제목 검색"/>
-    <span>정렬</span>
-    <select name="sortBy">
-        <option value="id">ID</option>
-        <option value="title">제목</option>
-        <option value="completed">완료 여부</option>
-    </select>
-    <select name="order">
-        <option value="asc">오름차순</option>
-        <option value="desc">내림차순</option>
-    </select>
-    <button type="submit">검색</button>
-</form>
+    <!-- 다크 모드 -->
+    <div class="text-end mb-3">
+        <button class="btn btn-outline-dark btn-sm" id="darkModeBtn" onclick="toggleDarkMode()">🌙 다크 모드</button>
+    </div>
 
-<!-- 할 일 목록 -->
-<h2>Todo List</h2>
-<table border="1">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>제목</th>
-        <th>완료 여부</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="todo : ${todos}">
-        <td th:text="${todo.id}"></td>
-        <td th:text="${todo.title}"></td>
-        <td>
-            <input type="checkbox" th:attr="data-id=${todo.id}"
-                   th:checked="${todo.completed}" class="toggle-completed"/>
-        </td>
-        <td>
-            <!-- 삭제 버튼 -->
-            <form th:action="@{/view/todos/delete/{id}(id=${todo.id})}" method="post" style="display:inline;">
-                <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
-            </form>
+    <!-- 검색 및 정렬 -->
+    <h2>검색 및 정렬</h2>
+    <form method="get" th:action="@{/view/todos}">
+        <input type="text" name="keyword" placeholder="제목 검색"/>
+        <span>정렬</span>
+        <select name="sortBy">
+            <option value="id">ID</option>
+            <option value="title">제목</option>
+            <option value="completed">완료 여부</option>
+        </select>
+        <select name="order">
+            <option value="asc">오름차순</option>
+            <option value="desc">내림차순</option>
+        </select>
+        <button type="submit">검색</button>
+    </form>
 
-            <!-- 수정 링크 -->
-            <a th:href="@{/view/todos/edit/{id}(id=${todo.id})}">수정</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+    <!-- 할 일 목록 -->
+    <h2>Todo List</h2>
+    <table class="table table-bordered" id="todo-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>제목</th>
+            <th>완료 여부</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="todo : ${todos}">
+            <td th:text="${todo.id}"></td>
+            <td>
+                <!-- 제목 클릭 시 수정 화면으로 이동 -->
+                <a th:text="${todo.title}" th:href="@{/view/todos/edit/{id}(id=${todo.id})}"></a>
+            </td>
+            <td>
+                <!-- 완료 여부 체크박스 -->
+                <input type="checkbox" th:attr="data-id=${todo.id}"
+                       th:checked="${todo.completed}" class="toggle-completed"/>
+            </td>
+            <td>
+                <!-- 삭제 버튼 -->
+                <form th:action="@{/view/todos/delete/{id}(id=${todo.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="delete-btn" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
-<!-- 페이징 -->
-<div>
+    <!-- 페이징 -->
+    <div class="pagination">
     <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
         <a th:href="@{/view/todos(page=${i}, keyword=${param.keyword}, sortBy=${param.sortBy}, order=${param.order})}"
            th:text="${i + 1}"
@@ -64,41 +73,18 @@
            style="margin: 0 4px;"
         ></a>
     </span>
+    </div>
+
+    <!-- 등록 -->
+    <h2>할 일 등록</h2>
+    <form method="post" th:action="@{/view/todos}" th:object="${todo}">
+        <input type="text" th:field="*{title}" placeholder="할 일 제목" required />
+        <button type="submit">등록</button>
+    </form>
 </div>
 
-<!-- 등록 -->
-<h2>할 일 등록</h2>
-<form method="post" th:action="@{/view/todos}" th:object="${todo}">
-    <input type="text" th:field="*{title}" placeholder="할 일 제목" required />
-    <button type="submit">등록</button>
-</form>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {  // html 문서가 완전히 로드되고 DOM이 생성된 후에 실행됨
-        const checkboxes = document.querySelectorAll('.toggle-completed');
-
-        // 체크박스가 여러 개라서 반복문 돌며 각 체크박스마다 이벤트 리스너 추가
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const id = this.getAttribute('data-id');
-                const completed = this.checked;
-
-                // ajax
-                fetch(`/view/todos/${id}/toggle`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type' : 'application/json'     // 요청 본문이 JSON 형식임을 명시
-                    },
-                    body: JSON.stringify({completed})           // 체크박스의 상태(completed)를 JSON 문자열로 변환하여 서버로 전송
-                }).then(response => {
-                    if ( !response.ok ) {   // 서버 응답 성공
-                        alert('업데이트에 실패했습니다.');
-                        console.error('업데이트에 실패했습니다.');
-                        console.error(response);
-                    }
-                });
-            });
-        });
-    });
-</script>
+<script th:src="@{/js/todo.js}"></script>
+<!-- Bootstrap JS (Popper 포함) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

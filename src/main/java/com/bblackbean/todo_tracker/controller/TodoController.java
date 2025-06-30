@@ -117,4 +117,15 @@ public class TodoController {
         // Sort.by("id").descending() : 최근에 등록한 할 일부터 보여줌
         return ResponseEntity.ok(ApiResponse.success(todoService.paging(pageable)));
     }
+
+    // 데이터 단건 조회 (수정화면 모달창)
+    @Operation(summary = "할 일 단건 JSON 조회", description = "수정 모달창을 위한 할 일 단건 데이터를 반환합니다.")
+    @GetMapping("/popup/{id}")
+    public ResponseEntity<ApiResponse<Todo>> getTodoAsJson(@PathVariable Long id) {
+        return todoService.findById(id)
+                .map(todo -> ResponseEntity.ok(ApiResponse.success(todo)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.fail("해당 ID의 할 일을 찾을 수 없습니다.")));
+    }
+
 }

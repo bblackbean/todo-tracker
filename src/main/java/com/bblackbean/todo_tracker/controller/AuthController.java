@@ -63,4 +63,11 @@ public class AuthController {
 
         return "redirect:/login";
     }
+
+    // 로그인 폼
+    @GetMapping("/login")
+    public String goLoginForm() {
+        return "login";
+    }
+
 }

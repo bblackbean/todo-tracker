@@ -41,3 +41,6 @@ src/main/resources/application.properties
 
 # db 파일
 *.db
+
+# docker 키값
+.env

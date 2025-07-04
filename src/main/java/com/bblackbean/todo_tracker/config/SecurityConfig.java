@@ -35,6 +35,11 @@ public class SecurityConfig {
                 // 그 외 모든 요청은 인증된 사용자만
                 .anyRequest().authenticated()   // 그 외 모든 요청은 인증된 사용자만 접근 가능하도록 설정
             )
+            // Google OAuth2 로그인
+            .oauth2Login(oauth -> oauth
+                .loginPage("/login")
+                .defaultSuccessUrl("/view/todos", true)
+            )
             // 3) 로그인 폼 설정
             .formLogin(form -> form
                 .loginPage("/login")    // 커스텀 로그인 페이지 경로

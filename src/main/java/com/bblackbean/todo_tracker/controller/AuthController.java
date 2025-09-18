@@ -32,7 +32,7 @@ public class AuthController {
     // 2) 회원가입 처리
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute("user") UserRegisterRequest request, BindingResult result, Model model) {
-        // @Valid : 해당 객체(request)에 지정된 유효성 검사(@NatBlank, @Size 등)를 실행
+        // @Valid : 해당 객체(request)에 지정된 유효성 검사(@NotBlank, @Size 등)를 실행
         // @ModelAttribute("user") : 폼 데이터를 바인딩하며, 뷰에서 폼에 사용된 name 속성과 매핑됨
         // BindingResult result : 폼 데이터의 유효성 검증 결과를 저장. 문제 발생 시 이 객체에 에러 정보가 추가됨
         

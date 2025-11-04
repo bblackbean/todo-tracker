@@ -12,15 +12,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TodoService {
-    List<Todo> findAll();
+    List<TodoResponse> findAll();
 
-    Optional<Todo> findById(Long id);
+    Optional<TodoResponse> findById(Long id);
 
     TodoResponse save(TodoRequest request);
 
     void delete(Long id);
 
-    List<Todo> findByCompleted(boolean completed);
+    List<TodoResponse> findByCompleted(boolean completed);
 
     List<Todo> search(String keyword);
 

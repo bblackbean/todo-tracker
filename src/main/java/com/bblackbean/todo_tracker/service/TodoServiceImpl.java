@@ -21,13 +21,13 @@ public class TodoServiceImpl implements TodoService {
     private final TodoRepository todoRepository;
 
     @Override
-    public List<Todo> findAll() {
-        return todoRepository.findAll();
+    public List<TodoResponse> findAll() {
+        return todoRepository.findAll().stream().map(TodoMapper::toResponse).toList();
     }
 
     @Override
-    public Optional<Todo> findById(Long id) {
-        return todoRepository.findById(id);
+    public Optional<TodoResponse> findById(Long id) {
+        return todoRepository.findById(id).map(TodoMapper::toResponse);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public List<Todo> findByCompleted(boolean completed) {
-        return todoRepository.findByCompleted(completed);
+    public List<TodoResponse> findByCompleted(boolean completed) {
+        return todoRepository.findByCompleted(completed).stream().map(TodoMapper::toResponse).toList();
     }
 
     @Override
@@ -65,12 +65,15 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public TodoResponse update(Long id, TodoRequest request) {
         Todo todo = todoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("할 일을 찾을 수 없습니다."));
+        .orElseThrow(() -> new IllegalArgumentException("해당 Id의 할 일을 찾을 수 없습니다: " + id));
 
+        // 요청받은 데이터로 엔티티의 모든 필드를 업데이트
         todo.setTitle(request.getTitle());
         todo.setCompleted(request.isCompleted());
+        todo.setStartDate(request.getStartDate());
+        todo.setEndDate(request.getEndDate());
 
         Todo saved = todoRepository.save(todo);
-        return new TodoResponse(saved.getId(), saved.getTitle(), saved.isCompleted());
+        return TodoMapper.toResponse(saved);
     }
 }

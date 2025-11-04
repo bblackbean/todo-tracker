@@ -4,10 +4,6 @@ import com.bblackbean.todo_tracker.domain.Todo;
 
 public class TodoMapper {
     public static Todo toEntity(TodoRequest request) {
-        if (request.getStartDate().isAfter(request.getEndDate())) {
-            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
-        }
-
         // request의 모든 필드를 사용하는 Todo 생성자로 엔티티 생성
         return new Todo(request.getTitle(), request.getStartDate(), request.getEndDate());
     }

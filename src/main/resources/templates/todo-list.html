@@ -39,6 +39,8 @@
         <tr>
             <th>ID</th>
             <th>제목</th>
+            <th>시작일</th>
+            <th>종료일</th>
             <th>완료 여부</th>
             <th></th>
         </tr>
@@ -51,6 +53,8 @@
                 <!--<a th:text="${todo.title}" th:href="@{/view/todos/edit/{id}(id=${todo.id})}"></a>-->
                 <a th:text="${todo.title}" href="javascript:void(0);" th:attr="data-id=${todo.id}" class="todoTtl"></a>
             </td>
+            <td th:text="${#temporals.format(todo.startDate, 'yyyy-MM-dd')}"></td>
+            <td th:text="${#temporals.format(todo.endDate, 'yyyy-MM-dd')}"></td>
             <td>
                 <!-- 완료 여부 체크박스 -->
                 <input type="checkbox" th:attr="data-id=${todo.id}"
@@ -81,7 +85,17 @@
     <div class="todo-form-section">
         <h2>할 일 등록</h2>
         <form method="post" th:action="@{/view/todos}" th:object="${todo}" class="todo-form">
-            <input type="text" th:field="*{title}" placeholder="할 일 제목" class="form-control" required />
+            <div class="mb-3">
+                <input type="text" th:field="*{title}" placeholder="할 일 제목" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label for="startDate" class="form-label">시작일</label>
+                <input type="date" id="startDate" th:field="*{startDate}" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label for="endDate" class="form-label">종료일</label>
+                <input type="date" id="endDate" th:field="*{endDate}" class="form-control" required />
+            </div>
             <button type="submit" class="btn btn-primary">등록</button>
         </form>
     </div>
@@ -108,6 +122,14 @@
                         <div class="mb-3">
                             <label for="edit-title" class="form-label">제목</label>
                             <input type="text" class="form-control" id="edit-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-startDate" class="form-label">시작일</label>
+                            <input type="date" class="form-control" id="edit-startDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-endDate" class="form-label">종료일</label>
+                            <input type="date" class="form-control" id="edit-endDate" required>
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="edit-completed">

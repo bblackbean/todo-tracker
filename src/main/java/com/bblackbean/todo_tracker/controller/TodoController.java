@@ -28,7 +28,7 @@ public class TodoController {
     // 전체 조회
     @Operation(summary = "할 일 목록 조회", description = "등록된 모든 할 일 데이터를 반환합니다.")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Todo>>> findAll() {
+    public ResponseEntity<ApiResponse<List<TodoResponse>>> findAll() {
         // ResponseEntity<ApiResponse<List<Todo>>>
         //     ResponseEntity<T> : HTTP 응답 자체를 감싸는 타입. 상태 코드(status)와 헤더, 바디를 가질 수 있음
         //     여기서 바디 <T>는 ApiResponse<List<Todo>>
@@ -41,9 +41,9 @@ public class TodoController {
     // 단건 조회
     @Operation(summary = "할 일 단건 조회", description = "특정 아이디의 할 일 데이터를 반환합니다.")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Todo>> findById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<TodoResponse>> findById(@PathVariable Long id) {
         return todoService.findById(id)
-                .map(todo -> ResponseEntity.ok(ApiResponse.success(todo)))
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.fail("해당 ID의 할 일을 찾을 수 없습니다.")));
 
@@ -85,7 +85,7 @@ public class TodoController {
     // http://localhost:8080/todos/filter?completed=true
     @Operation(summary = "할 일 필터링", description = "할 일 데이터를 완료여부에 따라 필터링합니다.")
     @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<List<Todo>>> filterByCompleted(@RequestParam boolean completed) {
+    public ResponseEntity<ApiResponse<List<TodoResponse>>> filterByCompleted(@RequestParam boolean completed) {
         return ResponseEntity.ok(ApiResponse.success(todoService.findByCompleted(completed)));
     }
 
@@ -121,9 +121,9 @@ public class TodoController {
     // 데이터 단건 조회 (수정화면 모달창)
     @Operation(summary = "할 일 단건 JSON 조회", description = "수정 모달창을 위한 할 일 단건 데이터를 반환합니다.")
     @GetMapping("/popup/{id}")
-    public ResponseEntity<ApiResponse<Todo>> getTodoAsJson(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<TodoResponse>> getTodoAsJson(@PathVariable Long id) {
         return todoService.findById(id)
-                .map(todo -> ResponseEntity.ok(ApiResponse.success(todo)))
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.fail("해당 ID의 할 일을 찾을 수 없습니다.")));
     }

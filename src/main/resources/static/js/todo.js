@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
                     const todo = json.data;
                     document.getElementById('edit-id').value = todo.id;
                     document.getElementById('edit-title').value = todo.title;
+                    document.getElementById('edit-startDate').value = todo.startDate;
+                    document.getElementById('edit-endDate').value = todo.endDate;
                     document.getElementById('edit-completed').checked = todo.completed;
 
                     new bootstrap.Modal(document.getElementById('editModal')).show();
@@ -48,6 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
 
         const id = document.getElementById('edit-id').value;
         const title = document.getElementById('edit-title').value;
+        const startDate = document.getElementById('edit-startDate').value;
+        const endDate = document.getElementById('edit-endDate').value;
         const completed = document.getElementById('edit-completed').checked;
 
         fetch(`/todos/${id}`, {
@@ -55,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ title, completed })
+            body: JSON.stringify({ title, completed, startDate, endDate })
         }).then(res => res.json()
             .then(json => {
                 if (json.success) {

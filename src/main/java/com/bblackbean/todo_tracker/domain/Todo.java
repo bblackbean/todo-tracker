@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @Setter
@@ -15,6 +17,18 @@ public class Todo {
     @Id // 반드시 jakarta.persistence.Id 여야 함
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
+
     private boolean completed;
+
+    // 날짜
+    private LocalDate startDate;
+    private LocalDate endDate;
+
+    public Todo(String title, LocalDate startDate, LocalDate endDate) {
+        this.title = title;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }

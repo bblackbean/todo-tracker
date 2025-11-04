@@ -123,7 +123,7 @@ public class TodoController {
     @GetMapping("/popup/{id}")
     public ResponseEntity<ApiResponse<TodoResponse>> getTodoAsJson(@PathVariable Long id) {
         return todoService.findById(id)
-                .map(todo -> ResponseEntity.ok(ApiResponse.success(todo)))
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.fail("해당 ID의 할 일을 찾을 수 없습니다.")));
     }

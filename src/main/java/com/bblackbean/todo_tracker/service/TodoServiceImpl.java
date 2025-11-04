@@ -33,6 +33,11 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public TodoResponse save(TodoRequest request) {
         Todo todo = TodoMapper.toEntity(request);
+
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
+        }
+
         Todo saved = todoRepository.save(todo);
         return TodoMapper.toResponse(saved);
     }
@@ -70,6 +75,10 @@ public class TodoServiceImpl implements TodoService {
         // 요청받은 데이터로 엔티티의 모든 필드를 업데이트
         todo.setTitle(request.getTitle());
         todo.setCompleted(request.isCompleted());
+
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
+        }
         todo.setStartDate(request.getStartDate());
         todo.setEndDate(request.getEndDate());
 

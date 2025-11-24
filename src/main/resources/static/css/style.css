@@ -4,6 +4,10 @@ body {
     background-color: #f5f7fa;
 }
 
+.fc-col-header-cell-cushion{text-decoration: none !important;}
+.fc-daygrid-day-number {text-decoration: none !important; color: #333;}
+.fc-daygrid-day-number:hover {text-decoration: none !important;}
+
 h1, h2 {
     color: #333;
 }

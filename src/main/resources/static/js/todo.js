@@ -1,48 +1,48 @@
 document.addEventListener('DOMContentLoaded', function() {  // html 문서가 완전히 로드되고 DOM이 생성된 후에 실행됨
-    const checkboxes = document.querySelectorAll('.toggle-completed');
-
-    // 체크박스가 여러 개라서 반복문 돌며 각 체크박스마다 이벤트 리스너 추가
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const id = this.getAttribute('data-id');
-            const completed = this.checked;
-
-            // ajax
-            fetch(`/view/todos/${id}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type' : 'application/json'     // 요청 본문이 JSON 형식임을 명시
-                },
-                body: JSON.stringify({completed})           // 체크박스의 상태(completed)를 JSON 문자열로 변환하여 서버로 전송
-            }).then(response => {
-                if ( !response.ok ) {   // 서버 응답 성공
-                    alert('업데이트에 실패했습니다.');
-                    console.error('업데이트에 실패했습니다.');
-                    console.error(response);
-                }
-            });
-        });
-    });
-
-    // 할 일 제목 클릭 시 수정 모달창 open
-    document.querySelectorAll('.todoTtl').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const todoId = this.getAttribute('data-id');
-
-            fetch(`/todos/popup/${todoId}`)
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',    // 초기 뷰를 월간 달력으로 설정
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth, timeGridWeek, timeGridDay' // 월, 주, 일 보기 버튼
+        },
+        editable: true,   // 이벤트 드래그, 리사이즈 가능 여부
+        selectable: true, //날짜 선택 가능 여부
+        // 서버 api로부터 이벤트(할 일) 데이터 가져옴
+        events: function(fetchInfo, successCallback, failureCallback) {
+            fetch('/todos')     // 기존에 만들어둔 전체 조회 api
                 .then(res => res.json())
-                .then(json => {
-                    const todo = json.data;
-                    document.getElementById('edit-id').value = todo.id;
-                    document.getElementById('edit-title').value = todo.title;
-                    document.getElementById('edit-startDate').value = todo.startDate;
-                    document.getElementById('edit-endDate').value = todo.endDate;
-                    document.getElementById('edit-completed').checked = todo.completed;
+                .then(apiRes => {
+                    if ( apiRes.success ) {
+                        console.log('data ::: ', apiRes.data);
 
-                    new bootstrap.Modal(document.getElementById('editModal')).show();
-                });
-        });
+                        const events = apiRes.data.map(todo => ({
+                            id: todo.id,
+                            title: todo.title,
+                            start: todo.startDate,
+                            // FullCalendar의 end는 exclusive이므로, +1일을 해줘야 정상적으로 표시됨
+                            end: new Date(new Date(todo.endDate).getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                            color: todo.completed ? '#6c757d' : '#0d6efd',  // 완료 여부에 따라 색상 변경
+                            extendedProps: {
+                                completed: todo.completed
+                            }
+                        }));
+                        
+                        successCallback(events);
+                    } else {
+                        failureCallback(new Error('Falied to fetch todos'));
+                    }
+                }).catch(error => failureCallback(error));
+        },
+        // 달력의 이벤트를 클릭했을 때의 동작
+        eventClick: function(info) {
+            // 기존의 수정 모달을 띄우는 로직을 여기에 연결
+            openEditModal(info.event.id);
+        }
     });
+    
+    calendar.render();  // 달력을 화면에 렌더링
 
     // 수정 폼 제출
     document.getElementById('editForm').addEventListener("submit", function(e) {
@@ -87,4 +87,24 @@ function toggleDarkMode() {
         body.classList.add("bg-light");
         btn.textContent = "🌙 다크 모드";
     }
+}
+
+// 수정 모달창 open
+function openEditModal(todoId) {
+    fetch(`/todos/popup/${todoId}`)
+        .then(res => res.json())
+        .then(json => {
+            if ( json.success ) {
+                const todo = json.data;
+                document.getElementById('edit-id').value = todo.id;
+                document.getElementById('edit-title').value = todo.title;
+                document.getElementById('edit-startDate').value = todo.startDate;
+                document.getElementById('edit-endDate').value = todo.endDate;
+                document.getElementById('edit-completed').checked = todo.completed;
+
+                new bootstrap.Modal(document.getElementById('editModal')).show();
+            } else {
+                alert(' 할 일 정보를 가져오는데 실패했습니다.');
+            }
+        }).catch(error => console.error('Error fetching todo for edit : ', error));
 }

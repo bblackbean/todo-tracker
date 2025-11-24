@@ -18,20 +18,24 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
                         .then(res => res.json())
                         .then(apiRes => {
                             if ( apiRes.success ) {
-                                console.log('data ::: ', apiRes.data);
-
-                                const events = apiRes.data.map(todo => ({
-                                    id: todo.id,
-                                    title: todo.title,
-                                    start: todo.startDate,
-                                    // FullCalendar의 end는 exclusive이므로, +1일을 해줘야 정상적으로 표시됨
-                                    end: new Date(new Date(todo.endDate).getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-                                    color: todo.completed ? '#6c757d' : '#0d6efd',  // 완료 여부에 따라 색상 변경
-                                    extendedProps: {
-                                        completed: todo.completed
+                                // console.log('data ::: ', apiRes.data);
+ 
+                                const events = apiRes.data.map(todo => {
+                                    const endDate = new Date(todo.endDate);
+                                    endDate.setDate(endDate.getDate() + 1);     // FullCalendar의 end는 exclusive이므로, +1일을 해줘야 정상적으로 표시됨
+ 
+                                    return {
+                                        id: todo.id,
+                                        title: todo.title,
+                                        start: todo.startDate,
+                                        end: endDate.toISOString().split('T')[0],
+                                        color: todo.completed ? '#6c757d' : '#0d6efd',  // 완료 여부에 따라 색상 변경
+                                        extendedProps: {
+                                            completed: todo.completed
+                                        }
                                     }
-                                }));
-
+                                });
+ 
                                 successCallback(events);
                             } else {
                                 failureCallback(new Error('Falied to fetch todos'));
@@ -58,7 +62,42 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
     
     calendar.render();  // 달력을 화면에 렌더링
 
-    // 수정 폼 제출
+    /**
+     * 등록 폼 제출 이벤트 처리
+     * */
+    document.getElementById('addForm').addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const newTodo = {
+            title: document.getElementById('add-title').value,
+            startDate: document.getElementById('add-startDate').value,
+            endDate: document.getElementById('add-endDate').value,
+            completed: false // 새로운 할 일은 항상 미완료 상태
+        };
+
+        fetch('/todos', { // POST 요청으로 할 일 생성 API 호출
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newTodo)
+        }).then(res => res.json())
+            .then(json => {
+                if (json.success) {
+                    // 모달창 닫기
+                    const addModal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
+                    addModal.hide();
+                    // 캘린더 이벤트 새로고침
+                    calendar.refetchEvents();
+                } else {
+                    alert('등록 실패: ' + (json.message || '알 수 없는 오류'));
+                }
+            });
+    });
+
+    /**
+     * 수정 폼 제출
+     * */
     document.getElementById('editForm').addEventListener("submit", function(e) {
         e.preventDefault();
 
@@ -77,13 +116,23 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
         }).then(res => res.json()
             .then(json => {
                 if (json.success) {
-                    location.reload();  // 저장 후 새로고침
+                    // 수정 모달창 닫고 캘린더 새로고침
+                    const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                    editModal.hide();
+                    calendar.refetchEvents();
                 } else {
                     alert('수정 실패');
                 }
             }));
     });
 
+});
+
+/**
+ * 모달창 닫힐 때 입력 필드 초기화
+ * */
+document.getElementById('addModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('addForm').reset();
 });
 
 function toggleDarkMode() {
@@ -103,7 +152,9 @@ function toggleDarkMode() {
     }
 }
 
-// 수정 모달창 open
+/**
+ * 수정 모달창 open
+ * */
 function openEditModal(todoId) {
     fetch(`/todos/popup/${todoId}`)
         .then(res => res.json())
@@ -118,7 +169,7 @@ function openEditModal(todoId) {
 
                 new bootstrap.Modal(document.getElementById('editModal')).show();
             } else {
-                alert(' 할 일 정보를 가져오는데 실패했습니다.');
+                alert('할 일 정보를 가져오는데 실패했습니다.');
             }
         }).catch(error => console.error('Error fetching todo for edit : ', error));
 }

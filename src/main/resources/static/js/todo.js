@@ -5,40 +5,54 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth, timeGridWeek, timeGridDay' // 월, 주, 일 보기 버튼
+            right: 'dayGridMonth,timeGridWeek,timeGridDay' // 월, 주, 일 보기 버튼
         },
         editable: true,   // 이벤트 드래그, 리사이즈 가능 여부
         selectable: true, //날짜 선택 가능 여부
-        // 서버 api로부터 이벤트(할 일) 데이터 가져옴
-        events: function(fetchInfo, successCallback, failureCallback) {
-            fetch('/todos')     // 기존에 만들어둔 전체 조회 api
-                .then(res => res.json())
-                .then(apiRes => {
-                    if ( apiRes.success ) {
-                        console.log('data ::: ', apiRes.data);
+        googleCalendarApiKey: document.getElementById('calendarKey').value,
+        eventSources: [
+            // 1. 기존 todo 데이터
+            {
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    fetch('/todos')     // 기존에 만들어둔 전체 조회 api
+                        .then(res => res.json())
+                        .then(apiRes => {
+                            if ( apiRes.success ) {
+                                console.log('data ::: ', apiRes.data);
 
-                        const events = apiRes.data.map(todo => ({
-                            id: todo.id,
-                            title: todo.title,
-                            start: todo.startDate,
-                            // FullCalendar의 end는 exclusive이므로, +1일을 해줘야 정상적으로 표시됨
-                            end: new Date(new Date(todo.endDate).getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-                            color: todo.completed ? '#6c757d' : '#0d6efd',  // 완료 여부에 따라 색상 변경
-                            extendedProps: {
-                                completed: todo.completed
+                                const events = apiRes.data.map(todo => ({
+                                    id: todo.id,
+                                    title: todo.title,
+                                    start: todo.startDate,
+                                    // FullCalendar의 end는 exclusive이므로, +1일을 해줘야 정상적으로 표시됨
+                                    end: new Date(new Date(todo.endDate).getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                                    color: todo.completed ? '#6c757d' : '#0d6efd',  // 완료 여부에 따라 색상 변경
+                                    extendedProps: {
+                                        completed: todo.completed
+                                    }
+                                }));
+
+                                successCallback(events);
+                            } else {
+                                failureCallback(new Error('Falied to fetch todos'));
                             }
-                        }));
-                        
-                        successCallback(events);
-                    } else {
-                        failureCallback(new Error('Falied to fetch todos'));
-                    }
-                }).catch(error => failureCallback(error));
-        },
+                        }).catch(error => failureCallback(error));
+                }
+            },
+            // 2. 대한민국 공휴일 데이터 소스(Google Calendar API)
+            {
+                // eventSources 배열에는 googleCalendarId만 명시
+                googleCalendarId: 'ko.south_korea#holiday@group.v.calendar.google.com',
+                color: '#e63946',   // 공휴일 배경색
+                textColor: 'white'  // 공휴일 텍스트색
+            }
+        ],
         // 달력의 이벤트를 클릭했을 때의 동작
         eventClick: function(info) {
-            // 기존의 수정 모달을 띄우는 로직을 여기에 연결
-            openEditModal(info.event.id);
+            // Google Calendar 이벤트는 id가 없으므로, 직접 만든 이벤트만 모달창 open
+            if (info.event.id) {
+                openEditModal(info.event.id);
+            }
         }
     });
     

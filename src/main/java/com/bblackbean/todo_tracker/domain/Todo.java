@@ -22,13 +22,16 @@ public class Todo {
 
     private boolean completed;
 
+    private String color;
+
     // 날짜
     private LocalDate startDate;
     private LocalDate endDate;
 
-    public Todo(String title, LocalDate startDate, LocalDate endDate) {
+    public Todo(String title, LocalDate startDate, LocalDate endDate, String color) {
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.color = color;
     }
 }

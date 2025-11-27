@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
                                         title: todo.title,
                                         start: todo.startDate,
                                         end: endDate.toISOString().split('T')[0],
-                                        color: todo.completed ? '#6c757d' : '#0d6efd',  // 완료 여부에 따라 색상 변경
+                                        color: todo.color,
                                         extendedProps: {
                                             completed: todo.completed
                                         }
@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
             title: document.getElementById('add-title').value,
             startDate: document.getElementById('add-startDate').value,
             endDate: document.getElementById('add-endDate').value,
+            color: document.getElementById('add-color').value,
             completed: false // 새로운 할 일은 항상 미완료 상태
         };
 
@@ -106,13 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
         const startDate = document.getElementById('edit-startDate').value;
         const endDate = document.getElementById('edit-endDate').value;
         const completed = document.getElementById('edit-completed').checked;
+        const color = document.getElementById('edit-color').value;
 
         fetch(`/todos/${id}`, {
             method: 'PUT',
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ title, completed, startDate, endDate })
+            body: JSON.stringify({ title, completed, startDate, endDate, color })
         }).then(res => res.json()
             .then(json => {
                 if (json.success) {
@@ -166,6 +168,7 @@ function openEditModal(todoId) {
                 document.getElementById('edit-startDate').value = todo.startDate;
                 document.getElementById('edit-endDate').value = todo.endDate;
                 document.getElementById('edit-completed').checked = todo.completed;
+                document.getElementById('edit-color').value = todo.color;
 
                 new bootstrap.Modal(document.getElementById('editModal')).show();
             } else {

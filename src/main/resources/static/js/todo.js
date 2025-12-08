@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {  // html 문서가 완전히 로드되고 DOM이 생성된 후에 실행됨
+    // 페이지 로드 시 날짜/날씨 함수 호출
+    displayTodayInfo();
+
     const calendarEl = document.getElementById('calendar');
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',    // 초기 뷰를 월간 달력으로 설정
@@ -175,4 +178,46 @@ function openEditModal(todoId) {
                 alert('할 일 정보를 가져오는데 실패했습니다.');
             }
         }).catch(error => console.error('Error fetching todo for edit : ', error));
+}
+
+
+/**
+ * 오늘 날짜 및 날씨 정보 표시
+ */
+function displayTodayInfo() {
+    // 1. 날짜 표시
+    const dateEl = document.getElementById('today-date');
+    const today = new Date();
+    const options = { year : 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+    dateEl.textContent = today.toLocaleDateString('ko-KR', options);
+
+    // 2. 날씨 표시
+    const weatherEl = document.getElementById('today-weather');
+    if ( navigator.geolocation ) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            // 날씨 Proxy API 호출
+            fetch(`/api/weather?lat=${lat}&lon=${lon}`)
+                .then(response => response.json())
+                .then(data => {
+                    const icon = data.weather[0].icon;
+                    const temp = data.main.temp.toFixed(1); // 소수점 첫째 자리까지
+                    const description = data.weather[0].description;
+
+                    weatherEl.innerHTML = `
+                        <img src="https://openweathermap.org/img/wn/${icon}.png" alt="Weather icon" style="width: 40px; height: 40px;">
+                        <span class="ms-1">${temp}°C, ${description}</span>
+                    `;
+                }).catch(error => {
+                    console.error('날씨 정보를 가져오는 데 실패했습니다.', error);
+                    weatherEl.textContent = '날씨 정보 로딩 실패';
+                });
+        }, () => {
+            weatherEl.textContent = '위치 정보를 허용해주세요.';
+        });
+    } else {
+        weatherEl.textContent = '위치 정보를 사용할 수 없습니다.';
+    }
 }

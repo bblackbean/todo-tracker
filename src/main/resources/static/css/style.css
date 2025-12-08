@@ -109,6 +109,16 @@ body.bg-light {
     color: #212529;
 }
 
+.info-header {
+    /* 라이트 모드에서의 기본 글자색 */
+    color: #212529;
+}
+
+body.dark-mode .info-header {
+    /* 다크 모드일 때의 글자색 */
+    color: #f8f9fa;
+}
+
 /* 다크 모드용 */
 body.dark-mode {
     background-color: #121212;

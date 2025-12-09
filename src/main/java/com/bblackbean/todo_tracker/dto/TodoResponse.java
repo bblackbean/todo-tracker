@@ -16,4 +16,5 @@ public class TodoResponse {
     private boolean completed;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String color;
 }

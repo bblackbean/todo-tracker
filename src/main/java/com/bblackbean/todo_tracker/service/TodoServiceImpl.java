@@ -81,6 +81,7 @@ public class TodoServiceImpl implements TodoService {
         }
         todo.setStartDate(request.getStartDate());
         todo.setEndDate(request.getEndDate());
+        todo.setColor(request.getColor());
 
         Todo saved = todoRepository.save(todo);
         return TodoMapper.toResponse(saved);

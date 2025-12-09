@@ -30,4 +30,6 @@ public class TodoRequest {
     @NotNull(message = "종료일을 입력하세요.")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
+
+    private String color;
 }

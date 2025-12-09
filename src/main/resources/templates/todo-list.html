@@ -18,30 +18,14 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>할 일 목록</h1>
+        <h1>Todo List</h1>
         <div>
             <!-- 등록 -->
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#searchModal">검색</button>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">새 할 일 등록</button>
             <button class="btn btn-outline-dark btn-sm" id="darkModeBtn" onclick="toggleDarkMode()">🌙 다크 모드</button>
         </div>
     </div>
-
-    <!-- 검색 및 정렬 (달력으로 변경하며 주석처리) -->
-<!--    <h2>검색 및 정렬</h2>-->
-<!--    <form method="get" th:action="@{/view/todos}">-->
-<!--        <input type="text" name="keyword" placeholder="제목 검색"/>-->
-<!--        <span>정렬</span>-->
-<!--        <select name="sortBy">-->
-<!--            <option value="id">ID</option>-->
-<!--            <option value="title">제목</option>-->
-<!--            <option value="completed">완료 여부</option>-->
-<!--        </select>-->
-<!--        <select name="order">-->
-<!--            <option value="asc">오름차순</option>-->
-<!--            <option value="desc">내림차순</option>-->
-<!--        </select>-->
-<!--        <button type="submit">검색</button>-->
-<!--    </form>-->
 
     <!-- 할 일 목록(table) -->
     <h2>Todo List</h2>
@@ -128,6 +112,30 @@
         </div>
     </div>
     <!-- // 수정 모달창 -->
+
+    <!-- 검색 모달창 -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-light text-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="searchModalLabel">할 일 검색</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="searchForm" class="d-flex gap-2">
+                        <input type="text" class="form-control" id="search-keyword" placeholder="검색어를 입력하세요" required>
+                        <button type="submit" class="btn btn-primary">검색</button>
+                    </form>
+                    <hr>
+                    <div id="search-results-container">
+                        <!-- 검색 결과 -->
+                        <p class="text-muted">검색어를 입력하고 검색 버튼을 눌러주세요.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- // 검색 모달창 -->
 
 </div>
 

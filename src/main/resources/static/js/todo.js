@@ -131,6 +131,60 @@ document.addEventListener('DOMContentLoaded', function() {  // html 문서가 �
             }));
     });
 
+
+    /**
+     * 검색 기능 관련
+     */
+    const searchForm = document.getElementById('searchForm');
+    const searchKeywordInput = document.getElementById('search-keyword');
+    const searchResultsContainer = document.getElementById('search-results-container');
+    const searchModal = new bootstrap.Modal(document.getElementById('searchModal'));
+
+    // 검색 폼 submit 이벤트
+    searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const keyword = searchKeywordInput.value.trim();
+        if (!keyword) return;
+
+        fetch(`/todos/search?keyword=${encodeURIComponent(keyword)}`)
+            .then(res => res.json())
+            .then(apiRes => {
+                searchResultsContainer.innerHTML = '';  // 이전 결과 초기화
+
+                if ( apiRes.success && apiRes.data.length > 0 ) {
+                    const resultList = document.createElement('ul');
+                    resultList.className = 'list-group';
+
+                    apiRes.data.forEach(todo => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'list-group-item list-group-item-action';
+                        listItem.style.cursor = 'pointer';
+                        listItem.dataset.id = todo.id;  // 수정 모달창을 열기 위해 ID 저장
+                        listItem.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${todo.title}</h6>
+                                <small>${todo.completed ? '완료' : '미완료'}</small>
+                            </div>
+                            <small class="text-muted">${todo.startDate} ~ ${todo.endDate}</small>
+                        `;
+                        resultList.appendChild(listItem);
+                    });
+
+                    searchResultsContainer.appendChild(resultList);
+                } else {
+                    searchResultsContainer.innerHTML = '<p class="text-muted">검색 결과가 없습니다.</p>';
+                }
+            });
+    });
+
+    searchResultsContainer.addEventListener('click', function(e) {
+        const targetItem = e.target.closest('.list-group-item');
+        if ( targetItem && targetItem.dataset.id ) {
+            searchModal.hide(); // 검색 모달 닫기
+            openEditModal(targetItem.dataset.id); // 수정 모달 열기
+        }
+    });
+
 });
 
 /**

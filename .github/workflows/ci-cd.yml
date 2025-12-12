@@ -1,9 +1,9 @@
 name: CI/CD Pipeline
 
-# main 브랜치에 push가 발생하면 동작
+# master 브랜치에 push가 발생하면 동작
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   build-and-push:

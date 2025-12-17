@@ -7,14 +7,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -32,6 +33,7 @@ class WeatherProxyControllerTest {
 
     // 성공 케이스
     @Test
+    @WithMockUser
     void getCurrentWeather_success_returns200_andBody() throws Exception {
         // 날씨 정보를 정상적으로 잘 받아오는지 확인. 테스트는 보통 Give-When-Then 3단계로 구성됨
         
@@ -68,6 +70,7 @@ class WeatherProxyControllerTest {
 
     // 잘못된 파라미터 케이스
     @Test
+    @WithMockUser
     void getCurrentWeather_invalidParam_returns400() throws Exception {
         mockMvc.perform(get("/api/weather")
                 .param("lat", "abc")    // 숫자가 아닌 잘못된 값
@@ -77,6 +80,7 @@ class WeatherProxyControllerTest {
 
     // 외부 api 오류 케이스
     @Test
+    @WithMockUser
     void getCurrentWeather_restTemplateThrows_returns500_andMessage() throws Exception {
         // 날씨 api를 호출하다가 에러가 발생했을 때, 서버가 터지지 않고 사용자에게 적절한 에러 메시지를 주는지 확인
 

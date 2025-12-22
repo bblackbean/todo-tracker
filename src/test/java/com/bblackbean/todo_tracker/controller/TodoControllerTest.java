@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -28,7 +30,7 @@ public class TodoControllerTest {
     @Test   // 테스트 메서드로 실행될 수 있도록 지정
     @DisplayName("할 일 전체 조회")   // 테스트 설명 추가
     void getAllTodos() throws Exception {
-        todoRepository.save(new Todo(null, "테스트 할 일", false));  // Todo 저장
+        todoRepository.save(new Todo("테스트 할 일", LocalDate.parse("2025-12-01"), LocalDate.parse("2025-12-07"), "#000000"));  // Todo 저장
 
         mockMvc.perform(get("/todos"))  // /todos 라는 url로 GET 요청을 보냄
                 .andExpect(status().isOk())        // 결과 검증 - http 응답 상태 코드가 200(요청 성공)인지 확인

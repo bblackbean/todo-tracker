@@ -38,6 +38,7 @@ Spring Boot 기반으로 만든 간단한 Todo API 프로젝트
     <img src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=Git&logoColor=white">
     <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=Docker&logoColor=white">
     <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=GitHub-Actions&logoColor=white">
+    <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logoColor=white"> 
 </p>
 
 ## test

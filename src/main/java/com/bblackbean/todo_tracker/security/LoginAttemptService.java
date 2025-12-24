@@ -1,6 +1,8 @@
 package com.bblackbean.todo_tracker.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +12,19 @@ import java.util.concurrent.TimeUnit;
 // Redis 카운터 서비스
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LoginAttemptService {
     private final StringRedisTemplate redis;
 
-    private static final int MAX_ATTEMPTS = 5;  // 최대 5번 로그인 시도 가능
-    private static final Duration TTL = Duration.ofMinutes(10); // 한 번 틀리기 시작하면 기록 10분간 유지
+    @Value("${security.login-attempt.max-attempts}")
+    private int maxAttempts;  // 최대 로그인 시도 횟수
+
+    @Value("${security.login-attempt.ttl-minutes}")
+    private int ttlMinutes;   // 기록 유지 시간(분)
+
+    private Duration getTtl() {
+        return Duration.ofMinutes(ttlMinutes);
+    }
 
     /**
      * 누가 틀렸는지 기록
@@ -32,8 +42,9 @@ public class LoginAttemptService {
 
         try {
             // 5번 이상 틀렸으면 true(차단됨), 아니면 false(통과)
-            return Integer.parseInt(v) >= MAX_ATTEMPTS;
+            return Integer.parseInt(v) >= maxAttempts;
         } catch ( NumberFormatException e ) {
+            log.warn("Invalid login attempt count found in Redis for id: {}", id, e);
             return false;
         }
     }
@@ -46,7 +57,7 @@ public class LoginAttemptService {
         Long cnt = redis.opsForValue().increment(k);
 
         if ( cnt != null && cnt == 1 ) {
-            redis.expire(k, TTL);
+            redis.expire(k, getTtl());
         }
 
         return cnt == null ? 0 : cnt.intValue();

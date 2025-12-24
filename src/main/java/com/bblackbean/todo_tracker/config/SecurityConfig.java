@@ -2,6 +2,7 @@ package com.bblackbean.todo_tracker.config;
 
 import com.bblackbean.todo_tracker.security.LoginAttemptService;
 import com.bblackbean.todo_tracker.security.LoginRateLimitFilter;
+import com.bblackbean.todo_tracker.util.RequestUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,13 +57,13 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/view/todos", true)     // 로그인 성공 시 리다이렉트 (true : 이전 url 경로와 상관없이 항상 이경로로 리다이렉트)
                 // 실패하면 카운트 증가
                 .failureHandler((req, res, ex) -> {
-                    String ip = req.getRemoteAddr();
+                    String ip = RequestUtils.getClientIp(req);
                     int cnt = loginAttemptService.recordFail(ip);
                     res.sendRedirect("/login?error=true&attempts=" + cnt);
                 })
                 // 성공하면 카운트 삭제
                 .successHandler((req, res, auth2) -> {
-                    String ip = req.getRemoteAddr();
+                    String ip = RequestUtils.getClientIp(req);
                     loginAttemptService.recordSuccess(ip);
                     res.sendRedirect("/view/todos");
                 })

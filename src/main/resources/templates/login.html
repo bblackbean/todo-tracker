@@ -36,6 +36,17 @@
             로그아웃 되었습니다.
         </div>
     </form>
+
+    <div th:if="${param.blocked}" class="alert alert-danger" style="margin-bottom: 12px;">
+        로그인 시도 횟수가 너무 많습니다.
+        <span th:if="${param.retryAfterSec}"
+              th:with="sec=${T(java.lang.Integer).parseInt(param.retryAfterSec[0])}, m=${sec/60}, s=${sec%60}"
+        >
+            <b th:text="${m}"></b>분 <b th:text="${s}"></b>초 후 다시 시도하세요.
+        </span>
+        <span th:if="${param.attempts}">현재 실패 횟수: <b th:text="${param.attempts[0]}"></b></span>
+    </div>
+
 </div>
 </body>
 </html>

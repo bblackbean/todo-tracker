@@ -1,5 +1,7 @@
 package com.bblackbean.todo_tracker.config;
 
+import com.bblackbean.todo_tracker.security.LoginAttemptService;
+import com.bblackbean.todo_tracker.security.LoginRateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +15,12 @@ public class SecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
     // PasswordEncoder : 비밀번호를 암호화/검증할 때 사용하는 인터페이스
+    private final LoginAttemptService loginAttemptService;
+
+    @Bean
+    public LoginRateLimitFilter loginRateLimitFilter() {
+        return new LoginRateLimitFilter(loginAttemptService);
+    }
 
     /**
      * SecurityFilterChain 빈 생성
@@ -35,6 +43,8 @@ public class SecurityConfig {
                 // 그 외 모든 요청은 인증된 사용자만
                 .anyRequest().authenticated()   // 그 외 모든 요청은 인증된 사용자만 접근 가능하도록 설정
             )
+            // 로그인 시도 선차단 필터 추가
+            .addFilterBefore(loginRateLimitFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             // Google OAuth2 로그인
             .oauth2Login(oauth -> oauth
                 .loginPage("/login")
@@ -44,6 +54,18 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")    // 커스텀 로그인 페이지 경로
                 .defaultSuccessUrl("/view/todos", true)     // 로그인 성공 시 리다이렉트 (true : 이전 url 경로와 상관없이 항상 이경로로 리다이렉트)
+                // 실패하면 카운트 증가
+                .failureHandler((req, res, ex) -> {
+                    String ip = req.getRemoteAddr();
+                    int cnt = loginAttemptService.recordFail(ip);
+                    res.sendRedirect("/login?error=true&attempts=" + cnt);
+                })
+                // 성공하면 카운트 삭제
+                .successHandler((req, res, auth2) -> {
+                    String ip = req.getRemoteAddr();
+                    loginAttemptService.recordSuccess(ip);
+                    res.sendRedirect("/view/todos");
+                })
                 .permitAll()    // 로그인 폼도 모두 허용 (로그인 자체는 모두 접근할 수 있음)
             )
             // 4) 로그아웃 설정

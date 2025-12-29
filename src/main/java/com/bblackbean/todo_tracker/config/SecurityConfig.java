@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration      // 이 클래스는 Spring의 설정 클래스
 @RequiredArgsConstructor
@@ -29,9 +30,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1) CSRF 설정 : CSRF는 폼로그인/로그아웃 전용 페이지로 제한
-            .csrf(csrf -> csrf.disable())
-                // CSRF(Cross-Site Request Forgery) 공격 방지를 비활성화 (보통 REST API 사용할 때 비활성화함)
+            // 1) CSRF 설정 : 보안을 위해 활성화
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            )
 
             // 2) URL 접근 권한 설정
             //      특정 URL 패턴에 대한 접근 제어를 설정
@@ -39,7 +41,7 @@ public class SecurityConfig {
                 // 로그인, 회원가입, 동적 리소스는 모두 허용
                 .requestMatchers("/login", "/register",
                     "/css/**", "/js/**", "/images/**",
-                    "/swagger-ui.html")
+                    "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**") // Swagger 관련 리소스 경로 추가
                 .permitAll()
                 // 그 외 모든 요청은 인증된 사용자만
                 .anyRequest().authenticated()   // 그 외 모든 요청은 인증된 사용자만 접근 가능하도록 설정
@@ -75,6 +77,11 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout")  // 로그아웃 성공 시 리다이렉트 경로
                 .invalidateHttpSession(true)        // 세션 무효화
                 .deleteCookies("JSESSIONID")    // 쿠키 삭제
+            )
+            // 5) 세션 관리 (중복 로그인 방지)
+            .sessionManagement(session -> session
+                .maximumSessions(1)              // 사용자당 최대 세션 수 (1개로 제한)
+                .maxSessionsPreventsLogin(false) // false: 새로운 로그인 허용 (기존 세션 만료), true: 새로운 로그인 차단
             )
             // 5) (선택) 기본 로그인 폼 대신 스프링이 제공하는 기본 제공 페이지 사용
             //.httpBasic(Customizer.withDefaults())

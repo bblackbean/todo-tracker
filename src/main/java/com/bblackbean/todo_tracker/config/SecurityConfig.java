@@ -45,7 +45,8 @@ public class SecurityConfig {
                 // 로그인, 회원가입, 동적 리소스는 모두 허용
                 .requestMatchers("/login", "/register",
                     "/css/**", "/js/**", "/images/**",
-                    "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**") // Swagger 관련 리소스 경로 추가
+                    "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**",
+                    "/actuator/**") // Actuator 및 Prometheus 경로 허용
                 .permitAll()
                 // 그 외 모든 요청은 인증된 사용자만
                 .anyRequest().authenticated()   // 그 외 모든 요청은 인증된 사용자만 접근 가능하도록 설정

@@ -36,7 +36,7 @@ public class SecurityConfig {
         http
             // 1) CSRF 설정 : 보안을 위해 활성화
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRepository(new CookieCsrfTokenRepository())
             )
 
             // 2) URL 접근 권한 설정
@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/register",
                     "/css/**", "/js/**", "/images/**",
                     "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**",
-                    "/actuator/**") // Actuator 및 Prometheus 경로 허용
+                    "/actuator/prometheus") // Actuator 및 Prometheus 경로 허용
                 .permitAll()
                 // 그 외 모든 요청은 인증된 사용자만
                 .anyRequest().authenticated()   // 그 외 모든 요청은 인증된 사용자만 접근 가능하도록 설정

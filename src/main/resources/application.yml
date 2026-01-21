@@ -25,3 +25,9 @@ spring:
       port: 6379
   cache:
     type: redis
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

@@ -10,6 +10,22 @@ Spring Boot 기반으로 만든 간단한 Todo API 프로젝트
 - 로그인 및 회원가입
 - 테스트 코드 (Controller, Service 계층)
 
+## 시스템 아키텍처
+```mermaid
+flowchart LR
+  U[User / Browser] -->|HTTP| APP[Spring Boot Todo Tracker]
+
+  APP -->|JDBC| DB[(MySQL)]
+  APP -->|Cache| REDIS[(Redis)]
+
+  APP -->|/actuator/prometheus| PROM[Prometheus]
+  PROM -->|"Query (PromQL)"| GRAF[Grafana Dashboard]
+  GRAF -->|Alert Notification| SLACK[Slack Channel]
+```
+- Spring Boot 애플리케이션은 MySQL/Redis 사용
+- Prometheus가 /actuator/prometheus를 스크랩하고, Grafana에서 대시보드/알람 운영
+- 서버 다운(up==0) 발생 시 Slack으로 알림 전송
+
 ## 사용 기술
 ### FrontEnd
 <p>
@@ -38,7 +54,10 @@ Spring Boot 기반으로 만든 간단한 Todo API 프로젝트
     <img src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=Git&logoColor=white">
     <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=Docker&logoColor=white">
     <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=GitHub-Actions&logoColor=white">
-    <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logoColor=white"> 
+    <br/>
+    <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=Redis&logoColor=white"> 
+    <img src="https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=Prometheus&logoColor=white">
+    <img src="https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=Grafana&logoColor=white">
 </p>
 
 ## test

@@ -11,7 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -96,22 +98,34 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public Todo findTodoById(Long id) {
         return todoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 Id의 할 일을 찾을 수 없습니다: " + id));
+                .orElseThrow(() -> new NoSuchElementException("해당 Id의 할 일을 찾을 수 없습니다: " + id));
     }
 
     @Override
     public void saveTodo(Todo todo) {
+        todo.setId(null);
         todo.setCompleted(false);
+        validateDateRange(todo.getStartDate(), todo.getEndDate());
         todoRepository.save(todo);
     }
 
     @Override
     public void updateTodo(Todo todo) {
-        todoRepository.save(todo);
+        Todo existing = findTodoById(todo.getId());
+        validateDateRange(todo.getStartDate(), todo.getEndDate());
+        existing.setTitle(todo.getTitle());
+        existing.setStartDate(todo.getStartDate());
+        existing.setEndDate(todo.getEndDate());
+        existing.setColor(todo.getColor());
+        todoRepository.save(existing);
     }
 
     private void validateDateRange(TodoRequest request) {
-        if (request.getStartDate().isAfter(request.getEndDate())) {
+        validateDateRange(request.getStartDate(), request.getEndDate());
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
         }
     }

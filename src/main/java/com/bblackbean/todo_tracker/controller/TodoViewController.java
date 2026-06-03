@@ -72,7 +72,7 @@ public class TodoViewController {
     @PostMapping("/view/todos/{id}/toggle")
     @ResponseBody
     public ResponseEntity<?> toggleCompleted(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
-        todoService.toggleCompleted(id, body.get("completed"));
+        todoService.toggleCompleted(id, Boolean.TRUE.equals(body.get("completed")));
         return ResponseEntity.ok().build();
     }
 }

@@ -5,6 +5,7 @@ import com.bblackbean.todo_tracker.domain.Todo;
 import com.bblackbean.todo_tracker.dto.TodoRequest;
 import com.bblackbean.todo_tracker.dto.TodoResponse;
 import com.bblackbean.todo_tracker.service.TodoService;
+import com.bblackbean.todo_tracker.util.RequestUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -102,8 +103,8 @@ public class TodoController {
     @Operation(summary = "할 일 목록 정렬", description = "오름차순/내림차순에 따라 할 일 데이터를 정렬합니다.")
     @GetMapping("/sorted")
     public ResponseEntity<ApiResponse<List<Todo>>> getSortedTodos(@RequestParam String sortBy, @RequestParam String order) {
-        Sort.Direction direction = order.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;   // 정렬 방향 결정
-        return ResponseEntity.ok(ApiResponse.success(todoService.sortBy(sortBy, direction)));  // 해당 방향으로 정렬된 결과 반환
+        Sort.Direction direction = RequestUtils.parseDirection(order);
+        return ResponseEntity.ok(ApiResponse.success(todoService.sortBy(sortBy, direction)));
     }
 
     // 페이징
@@ -116,16 +117,6 @@ public class TodoController {
         // size : 한 페이지당 몇 개 항목을 가져올지
         // Sort.by("id").descending() : 최근에 등록한 할 일부터 보여줌
         return ResponseEntity.ok(ApiResponse.success(todoService.paging(pageable)));
-    }
-
-    // 데이터 단건 조회 (수정화면 모달창)
-    @Operation(summary = "할 일 단건 JSON 조회", description = "수정 모달창을 위한 할 일 단건 데이터를 반환합니다.")
-    @GetMapping("/popup/{id}")
-    public ResponseEntity<ApiResponse<TodoResponse>> getTodoAsJson(@PathVariable Long id) {
-        return todoService.findById(id)
-                .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.fail("해당 ID의 할 일을 찾을 수 없습니다.")));
     }
 
 }

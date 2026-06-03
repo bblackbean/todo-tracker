@@ -1,68 +1,134 @@
 package com.bblackbean.todo_tracker.controller;
 
-import com.bblackbean.todo_tracker.domain.Todo;
-import com.bblackbean.todo_tracker.repository.TodoRepository;
+import com.bblackbean.todo_tracker.common.ApiResponse;
+import com.bblackbean.todo_tracker.dto.TodoRequest;
+import com.bblackbean.todo_tracker.dto.TodoResponse;
+import com.bblackbean.todo_tracker.service.TodoService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ActiveProfiles("test")
-@SpringBootTest         // 스프링 부트 애플리케이션을 테스트 환경에서 실행
-@AutoConfigureMockMvc   // MockMvc(실제 서버를 실행하지 않고, 컨트롤러의 동작으로 가짜 요청으로 테스트할 수 있도록 도와줌)를 자동으로 구성
-public class TodoControllerTest {
-    @Autowired
-    private MockMvc mockMvc;    // MockMvc : 컨트롤러를 테스트할 때 HTTP 요청을 시뮬레이션하고, 그 응답을 검증할 수 있는 도구
+@WebMvcTest(
+        value = TodoController.class,
+        excludeAutoConfiguration = {
+                SecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class,
+                OAuth2ClientAutoConfiguration.class,
+                OAuth2ResourceServerAutoConfiguration.class
+        }
+)
+class TodoControllerTest {
 
     @Autowired
-    private TodoRepository todoRepository;
+    private MockMvc mockMvc;
 
-    @Test   // 테스트 메서드로 실행될 수 있도록 지정
-    @DisplayName("할 일 전체 조회")   // 테스트 설명 추가
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private TodoService todoService;
+
+    @Test
+    @DisplayName("할 일 전체 조회")
     void getAllTodos() throws Exception {
-        todoRepository.save(new Todo("테스트 할 일", LocalDate.parse("2025-12-01"), LocalDate.parse("2025-12-07"), "#000000"));  // Todo 저장
+        TodoResponse response = new TodoResponse(1L, "테스트 할 일", false,
+                LocalDate.of(2025, 12, 1), LocalDate.of(2025, 12, 7), "#000000");
+        when(todoService.findAll()).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/todos"))  // /todos 라는 url로 GET 요청을 보냄
-                .andExpect(status().isOk())        // 결과 검증 - http 응답 상태 코드가 200(요청 성공)인지 확인
-                .andExpect(jsonPath("$", not(empty())))     // 응답 데이터 확인
+        mockMvc.perform(get("/todos"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].title", is("테스트 할 일")));
-
-        // jsonPath : JSON 데이터의 특정 값을 추출하거나 검증할 수 있는 라이브러리
-        //   $ : JSON의 전체 데이터를 나타냄
-        //   not(empty()) : 응답 데이터가 비어있지 않은지 확인
-        //   data : JSON 응답 데이터의 data 키
-        //   $.data[0].title : data 배열의 첫 번째 객쳉의 title 속성 값을 가져와 "테스트 할 일"과 같은지 확인
-        // 목록을 전체 조회 하기 때문에 data는 배열임
     }
 
     @Test
     @DisplayName("할 일 등록")
     void createTodo() throws Exception {
-        String requestBody = "{\n"
-            + "    \"title\": \"새로운 할 일\"\n"
-            + "}"
-        ;   // 요청 데이터를 JSON 형식으로 정의
+        LocalDate start = LocalDate.of(2025, 12, 1);
+        LocalDate end = LocalDate.of(2025, 12, 7);
+        TodoResponse response = new TodoResponse(1L, "새로운 할 일", false, start, end, "#000000");
+        when(todoService.save(any())).thenReturn(response);
+
+        String requestBody = """
+                {
+                    "title": "새로운 할 일",
+                    "startDate": "2025-12-01",
+                    "endDate": "2025-12-07"
+                }
+                """;
 
         mockMvc.perform(post("/todos")
-                    .contentType(MediaType.APPLICATION_JSON)    // 요청 데이터 형식 지정 : JSON
-                    .content(requestBody))                      // 요청 데이터 본문(requestBody)을 포함
-                .andExpect(status().isOk())                     // 상태 코드가 200인지 확인
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.title", is("새로운 할 일")))     // 응답 데이터의 title 확인
-                .andExpect(jsonPath("$.data.completed", is(false)));       // 응답 데이터의 completed 확인
-
-        // createTodo의 data는 객체라서 인덱싱 안함
+                .andExpect(jsonPath("$.data.title", is("새로운 할 일")))
+                .andExpect(jsonPath("$.data.completed", is(false)));
     }
 
+    @Test
+    @DisplayName("할 일 등록 - 필수 날짜 누락 시 400 반환")
+    void createTodo_날짜없음_400() throws Exception {
+        String requestBody = """
+                {
+                    "title": "날짜 없는 할 일"
+                }
+                """;
+
+        mockMvc.perform(post("/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("단건 조회 - 존재하는 ID면 200 반환")
+    void findById_성공() throws Exception {
+        TodoResponse response = new TodoResponse(1L, "할 일", false,
+                LocalDate.now(), LocalDate.now().plusDays(1), "#000000");
+        when(todoService.findById(1L)).thenReturn(Optional.of(response));
+
+        mockMvc.perform(get("/todos/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id", is(1)));
+    }
+
+    @Test
+    @DisplayName("단건 조회 - 없는 ID면 404 반환")
+    void findById_없는ID_404() throws Exception {
+        when(todoService.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/todos/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("/todos/popup/{id} 엔드포인트는 제거되어 404 반환")
+    void popup_엔드포인트_제거됨() throws Exception {
+        mockMvc.perform(get("/todos/popup/1"))
+                .andExpect(status().isNotFound());
+    }
 }

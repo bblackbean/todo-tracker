@@ -6,72 +6,238 @@ import com.bblackbean.todo_tracker.dto.TodoResponse;
 import com.bblackbean.todo_tracker.repository.TodoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
-@SpringBootTest
-public class TodoServiceTest {
+@ExtendWith(MockitoExtension.class)
+class TodoServiceTest {
 
-    @Mock           // 실제 데이터베이스와 상호작용하지 않고, 테스트가 독립적으로 동작할 수 있도록 설정
+    @Mock
     private TodoRepository todoRepository;
 
-    @InjectMocks    // TodoServiceImpl 객체에 @Mock으로 생성된 TodoRepository 주입
+    @InjectMocks
     private TodoServiceImpl todoService;
 
-    /**
-     * TodoServiceImpl.save() 메서드가 새로운 할 일(Todo)을 올바르게 저장하고 적절한 응답을 반환하는지 확인
-     * */
+    // ── save ──────────────────────────────────────────────────────────────
+
     @Test
-    @DisplayName("할 일 등록")
-    void todoCreate() {
-        // given
-        /*TodoRequest request = new TodoRequest("테스트 할 일", false);    // TodoRequest 객체로 클라이언트로부터 요청이 전달되었다는 가정을 설정
-        Todo savedEntity = new Todo(1L, "테스트 할 일", false); */     // Todo 엔티티(saveEntity)는 데이터베이스에 저장된 할 일의 상태를 가정
+    @DisplayName("할 일 등록 - 종료일이 시작일보다 빠르면 예외 발생")
+    void save_날짜검증_실패() {
+        TodoRequest request = new TodoRequest(
+                "테스트", false,
+                LocalDate.of(2025, 12, 10),
+                LocalDate.of(2025, 12, 1),
+                "#000000"
+        );
 
-//        when(todoRepository.save(any())).thenReturn(savedEntity);
-        // when-thenReturn : Mockito에서 사용되는 메서드로, 특정 조건이 만족될 때(Mock 객체에서) 반환값을 지정한다.
-        // todoRepository.save() 호출 시 savedEntity를 반환하도록 Mock 설정
-        // 이렇게 하면 실제 DB와 상호작용할 필요 없이 가상의 데이터를 반환함
-
-        // when
-//        TodoResponse result = todoService.save(request);
-        // save() 메서드를 호출하여 결과를 반환받음
-        // 이 메서드 내부에서 odoMapper.toEntity()와 todoRepository.save()가 호출됨
-
-        // then
-        /*assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getTitle()).isEqualTo("테스트 할 일");
-        assertThat(result.isCompleted()).isFalse();*/
-        // 반환된 결과(TodoResponse)의 필드 값들이 예상한 값과 일치하는지 검증
+        assertThatThrownBy(() -> todoService.save(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("종료일은 시작일보다 빠를 수 없습니다.");
+        verify(todoRepository, never()).save(any());
     }
 
-    /**
-     * TodoServiceImpl.findById() 메서드가 특정 Id를 가진 할 일(Todo)을 올바르게 조회하는지 확인함
-     * */
     @Test
-    @DisplayName("할 일 단건 조회")
-    void todoList() {
-        // given
-        /*Todo todo = new Todo(1L, "단건 조회", false);
-        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));*/
-        // Id가 1인 Todo 엔티티를 데이터베이스에서 조회했을 때 반환될 값을 Mock으로 설정
+    @DisplayName("할 일 등록 - 유효한 요청이면 저장 후 응답 반환")
+    void save_성공() {
+        LocalDate start = LocalDate.of(2025, 12, 1);
+        LocalDate end = LocalDate.of(2025, 12, 7);
+        TodoRequest request = new TodoRequest("공부하기", false, start, end, "#ff0000");
+        Todo saved = new Todo(1L, "공부하기", false, "#ff0000", start, end);
+        when(todoRepository.save(any())).thenReturn(saved);
 
-        // when
-        /*Optional<Todo> result = todoService.findById(1L);*/
-        // findById() 메서드를 호출하여 특정 Id의 할 일을 찾는 동작 수행
+        TodoResponse result = todoService.save(request);
 
-        // then
-        /*assertThat(result).isPresent();
-        assertThat(result.get().getTitle()).isEqualTo("단건 조회");*/
-        // 반환된 결과가 비어 있지 않고(isPresent()), 제목이 예상한 값("단건 조회")과 일치하는지 확인
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getTitle()).isEqualTo("공부하기");
+        assertThat(result.isCompleted()).isFalse();
+    }
+
+    // ── update ────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("할 일 수정 - 종료일이 시작일보다 빠르면 예외 발생")
+    void update_날짜검증_실패() {
+        TodoRequest request = new TodoRequest(
+                "수정", false,
+                LocalDate.of(2025, 12, 10),
+                LocalDate.of(2025, 12, 1),
+                "#000000"
+        );
+
+        assertThatThrownBy(() -> todoService.update(1L, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("종료일은 시작일보다 빠를 수 없습니다.");
+        verify(todoRepository, never()).findById(any());
+    }
+
+    // ── findTodoById ──────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("findTodoById - 존재하지 않는 ID면 NoSuchElementException 발생 (404 처리)")
+    void findTodoById_없는ID_예외() {
+        when(todoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoService.findTodoById(99L))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("99");
+    }
+
+    @Test
+    @DisplayName("findTodoById - 존재하는 ID면 엔티티 반환")
+    void findTodoById_성공() {
+        Todo todo = new Todo(1L, "할 일", false, "#000000", LocalDate.now(), LocalDate.now().plusDays(1));
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+
+        Todo result = todoService.findTodoById(1L);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getTitle()).isEqualTo("할 일");
+    }
+
+    // ── toggleCompleted ───────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("toggleCompleted - 완료 상태 변경 후 저장")
+    void toggleCompleted_완료처리() {
+        Todo todo = new Todo(1L, "할 일", false, "#000000", LocalDate.now(), LocalDate.now().plusDays(1));
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+
+        todoService.toggleCompleted(1L, true);
+
+        assertThat(todo.isCompleted()).isTrue();
+        verify(todoRepository).save(todo);
+    }
+
+    @Test
+    @DisplayName("toggleCompleted - 존재하지 않는 ID면 NoSuchElementException 발생")
+    void toggleCompleted_없는ID_예외() {
+        when(todoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoService.toggleCompleted(99L, true))
+                .isInstanceOf(NoSuchElementException.class);
+        verify(todoRepository, never()).save(any());
+    }
+
+    // ── findPage ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("findPage - 키워드 없으면 전체 페이징 조회")
+    void findPage_키워드없음() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Todo> mockPage = new PageImpl<>(List.of());
+        when(todoRepository.findAll(pageable)).thenReturn(mockPage);
+
+        Page<Todo> result = todoService.findPage(null, pageable);
+
+        verify(todoRepository).findAll(pageable);
+        verify(todoRepository, never()).findByTitleContainingIgnoreCase(any(), any());
+        assertThat(result).isSameAs(mockPage);
+    }
+
+    @Test
+    @DisplayName("findPage - 키워드 있으면 키워드 검색 조회")
+    void findPage_키워드있음() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Todo> mockPage = new PageImpl<>(List.of());
+        when(todoRepository.findByTitleContainingIgnoreCase("공부", pageable)).thenReturn(mockPage);
+
+        Page<Todo> result = todoService.findPage("공부", pageable);
+
+        verify(todoRepository).findByTitleContainingIgnoreCase("공부", pageable);
+        verify(todoRepository, never()).findAll(pageable);
+        assertThat(result).isSameAs(mockPage);
+    }
+
+    // ── saveTodo ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("saveTodo - id를 null로 초기화해 기존 레코드 덮어쓰기 방지")
+    void saveTodo_id필드_null로초기화() {
+        LocalDate start = LocalDate.of(2025, 12, 1);
+        LocalDate end = LocalDate.of(2025, 12, 7);
+        Todo todo = new Todo(5L, "할 일", true, "#000000", start, end); // id=5 설정
+        when(todoRepository.save(any())).thenReturn(todo);
+
+        todoService.saveTodo(todo);
+
+        assertThat(todo.getId()).isNull(); // id가 null로 초기화되어야 함
+        assertThat(todo.isCompleted()).isFalse();
+        verify(todoRepository).save(todo);
+    }
+
+    @Test
+    @DisplayName("saveTodo - 종료일이 시작일보다 빠르면 예외 발생")
+    void saveTodo_날짜검증_실패() {
+        Todo todo = new Todo(null, "할 일", false, "#000000",
+                LocalDate.of(2025, 12, 10), LocalDate.of(2025, 12, 1));
+
+        assertThatThrownBy(() -> todoService.saveTodo(todo))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("종료일은 시작일보다 빠를 수 없습니다.");
+        verify(todoRepository, never()).save(any());
+    }
+
+    // ── updateTodo ────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("updateTodo - 존재하지 않는 ID면 NoSuchElementException 발생")
+    void updateTodo_없는ID_예외() {
+        Todo todo = new Todo(99L, "수정", false, "#000000",
+                LocalDate.of(2025, 12, 1), LocalDate.of(2025, 12, 7));
+        when(todoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> todoService.updateTodo(todo))
+                .isInstanceOf(NoSuchElementException.class);
+        verify(todoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateTodo - 종료일이 시작일보다 빠르면 예외 발생")
+    void updateTodo_날짜검증_실패() {
+        Todo existing = new Todo(1L, "기존", false, "#000000",
+                LocalDate.of(2025, 12, 1), LocalDate.of(2025, 12, 7));
+        Todo form = new Todo(1L, "수정", false, "#ff0000",
+                LocalDate.of(2025, 12, 10), LocalDate.of(2025, 12, 1));
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> todoService.updateTodo(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("종료일은 시작일보다 빠를 수 없습니다.");
+        verify(todoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateTodo - 기존 엔티티의 필드를 업데이트 후 저장")
+    void updateTodo_성공() {
+        LocalDate newStart = LocalDate.of(2025, 12, 5);
+        LocalDate newEnd = LocalDate.of(2025, 12, 10);
+        Todo existing = new Todo(1L, "기존 제목", false, "#000000",
+                LocalDate.of(2025, 12, 1), LocalDate.of(2025, 12, 7));
+        Todo form = new Todo(1L, "새 제목", false, "#ff0000", newStart, newEnd);
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(todoRepository.save(existing)).thenReturn(existing);
+
+        todoService.updateTodo(form);
+
+        assertThat(existing.getTitle()).isEqualTo("새 제목");
+        assertThat(existing.getColor()).isEqualTo("#ff0000");
+        assertThat(existing.getStartDate()).isEqualTo(newStart);
+        verify(todoRepository).save(existing);
     }
 }

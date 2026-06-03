@@ -1,9 +1,14 @@
 package com.bblackbean.todo_tracker.util;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Sort;
 
 public final class RequestUtils {
     private RequestUtils() {}   // 인스턴스화 방지
+
+    public static Sort.Direction parseDirection(String order) {
+        return "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
+    }
 
     /**
      * http 요청을 보낸 클라이언트의 실제 IP 주소 추출

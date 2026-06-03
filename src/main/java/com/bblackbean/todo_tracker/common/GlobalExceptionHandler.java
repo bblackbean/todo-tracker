@@ -1,19 +1,27 @@
 package com.bblackbean.todo_tracker.common;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-@RestControllerAdvice   // 응답을 JSON으로 내려줌
+@RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(MethodArgumentNotValidException.class)    // MethodArgumentNotValidException : 요청값 검증에 실패했을 때 뜨는 오류
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationError(MethodArgumentNotValidException ex) {
-        // 첫 번째 오류 메시지만 추출
         FieldError fieldError = ex.getBindingResult().getFieldError();
         String message = (fieldError != null) ? fieldError.getDefaultMessage() : "입력 값 오류";
         return ResponseEntity.badRequest().body(ApiResponse.fail(message));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail("요청한 리소스를 찾을 수 없습니다."));
     }
 
     @ExceptionHandler(Exception.class)

@@ -29,4 +29,14 @@ public interface TodoService {
     Page<Todo> paging(Pageable pageable);
 
     TodoResponse update(Long id, @Valid TodoRequest request);
+
+    void toggleCompleted(Long id, boolean completed);
+
+    Page<Todo> findPage(String keyword, Pageable pageable);
+
+    Todo findTodoById(Long id);
+
+    void saveTodo(Todo todo);
+
+    void updateTodo(Todo todo);
 }

@@ -32,12 +32,8 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public TodoResponse save(TodoRequest request) {
+        validateDateRange(request);
         Todo todo = TodoMapper.toEntity(request);
-
-        if (request.getStartDate().isAfter(request.getEndDate())) {
-            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
-        }
-
         Todo saved = todoRepository.save(todo);
         return TodoMapper.toResponse(saved);
     }
@@ -69,21 +65,54 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public TodoResponse update(Long id, TodoRequest request) {
-        Todo todo = todoRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("해당 Id의 할 일을 찾을 수 없습니다: " + id));
+        validateDateRange(request);
+        Todo todo = findTodoById(id);
 
-        // 요청받은 데이터로 엔티티의 모든 필드를 업데이트
         todo.setTitle(request.getTitle());
         todo.setCompleted(request.isCompleted());
-
-        if (request.getStartDate().isAfter(request.getEndDate())) {
-            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
-        }
         todo.setStartDate(request.getStartDate());
         todo.setEndDate(request.getEndDate());
         todo.setColor(request.getColor());
 
         Todo saved = todoRepository.save(todo);
         return TodoMapper.toResponse(saved);
+    }
+
+    @Override
+    public void toggleCompleted(Long id, boolean completed) {
+        Todo todo = findTodoById(id);
+        todo.setCompleted(completed);
+        todoRepository.save(todo);
+    }
+
+    @Override
+    public Page<Todo> findPage(String keyword, Pageable pageable) {
+        if (keyword != null) {
+            return todoRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+        }
+        return todoRepository.findAll(pageable);
+    }
+
+    @Override
+    public Todo findTodoById(Long id) {
+        return todoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 Id의 할 일을 찾을 수 없습니다: " + id));
+    }
+
+    @Override
+    public void saveTodo(Todo todo) {
+        todo.setCompleted(false);
+        todoRepository.save(todo);
+    }
+
+    @Override
+    public void updateTodo(Todo todo) {
+        todoRepository.save(todo);
+    }
+
+    private void validateDateRange(TodoRequest request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
+        }
     }
 }
